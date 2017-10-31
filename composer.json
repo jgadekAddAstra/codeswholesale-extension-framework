@@ -1,5 +1,5 @@
 {
-    "name": "codeswholesale/cw-extension-framework",
+    "name": "ad-astra-codeswholesale/codeswholesale-extension-framework",
     "type": "library",
     "description": "The CodesWholesale Extension Framework",
     "keywords": [
@@ -15,12 +15,12 @@
     "authors": [
         {
             "name": "CodesWholesale.com",
-            "email": "devteam@codeswholesale.com",
+            "email": "jakub.gadek@ad-astra.pl",
             "role": "Developer"
         }
     ],
     "require": {
-        "codeswholesale/sdk": "1.0.*@beta"
+        "codeswholesale/sdk": "1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.0"
