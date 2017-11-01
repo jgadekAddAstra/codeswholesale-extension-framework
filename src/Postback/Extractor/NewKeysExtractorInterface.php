@@ -1,13 +1,5 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: maciejklowan
- * Date: 07/07/15
- * Time: 16:14
- */
-
-namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
-/**
  *   This file is part of codeswholesale-plugin-framework.
  *
  *   codeswholesale-plugin-framework is free software; you can redistribute it and/or modify
@@ -24,9 +16,15 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+namespace CodesWholesaleFramework\Postback\Extractor;
+/**
+ * Created by PhpStorm.
+ * User: maciejklowan
+ * Date: 06/07/15
+ * Time: 15:59
+ */
 
-interface EventDispatcher {
+interface NewKeysExtractorInterface{
 
-    function dispatchEvent(array $newKeys);
-
+    function extract($params);
 }

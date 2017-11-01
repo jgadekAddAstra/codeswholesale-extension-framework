@@ -1,12 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maciejklowan
- * Date: 07/07/15
- * Time: 16:14
- */
-
-namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
+namespace CodesWholesaleFramework\Orders\Utils;
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -24,9 +17,6 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-interface EventDispatcher {
-
-    function dispatchEvent(array $newKeys);
-
+interface OrderCreator{
+    function __construct($statusChange, $exportOrderToDataBase, $eventDispatcher, $itemRetriever, $errorHandler, $cwErrorHandler, $orderValidation);
 }

@@ -2,11 +2,11 @@
 /**
  * Created by PhpStorm.
  * User: maciejklowan
- * Date: 07/07/15
- * Time: 16:14
+ * Date: 08/07/15
+ * Time: 15:17
  */
 
-namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
+namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock\Utils;
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -25,8 +25,8 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-interface EventDispatcher {
+interface SpreadCalculatorInterface {
 
-    function dispatchEvent(array $newKeys);
+    function calculateSpread(array $spreadParams, $price);
 
 }

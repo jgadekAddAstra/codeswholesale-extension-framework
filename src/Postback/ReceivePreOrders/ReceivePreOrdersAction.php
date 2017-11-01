@@ -1,7 +1,6 @@
 <?php
 
 namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
-
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -20,20 +19,9 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 use CodesWholesaleFramework\Action;
-use CodesWholesaleFramework\Connection\Client;
-use CodesWholesaleFramework\Exceptions\ReceivePreOrderException;
-use CodesWholesaleFramework\Postback\Extractor\NewKeysExtractor;
-use CodesWholesaleFramework\Postback\InternalProduct;
-use CodesWholesaleFramework\Postback\PostBack;
-use CodesWholesaleFramework\Postback\Retriever\ItemRetriever;
 
-class ReceivePreOrdersAction extends PostBack implements Action
+class ReceivePreOrdersAction implements Action
 {
-    /**
-     * @var string
-     */
-    public $input;
-
     /**
      * @var ItemRetriever
      */
@@ -44,66 +32,56 @@ class ReceivePreOrdersAction extends PostBack implements Action
      */
     private $newKeysExtractor;
 
-    /**
-     * @var EventDispatcher
-     */
     private $eventDispatcher;
 
-    /**
-     * @var ExternalOrder
-     */
-    private $externalOrder;
+    private $connection;
 
     /**
-     * @var Client
+     * @param $itemRetriever
+     * @param $eventDispatcher
      */
-    private $client;
-
-    /**
-     * ReceivePreOrdersAction constructor.
-     * @param ItemRetriever $itemRetriever
-     * @param EventDispatcher $eventDispatcher
-     * @param NewKeysExtractor $newKeysExtractor
-     * @param ExternalOrder $externalOrder
-     * @param Client $client
-     */
-    public function __construct(ItemRetriever $itemRetriever, EventDispatcher $eventDispatcher, 
-                                NewKeysExtractor $newKeysExtractor, ExternalOrder $externalOrder, Client $client)
+    function __construct($itemRetriever, $eventDispatcher)
     {
         $this->itemRetriever = $itemRetriever;
         $this->eventDispatcher = $eventDispatcher;
-        $this->newKeysExtractor = $newKeysExtractor;
-        $this->externalOrder = $externalOrder;
-        $this->client = $client;
+        $this->newKeysExtractor = new NewKeysExtractorImpl();
     }
 
     public function process()
     {
+        $request = file_get_contents('php://input');
+
+        if (empty($request)) {
+
+            die("No request data");
+        }
+
         try {
 
-            $this->isEmptyRequest();
+            $productOrdered = $this->connection->receiveProductOrdered();
 
-            $productOrdered = $this->client->receiveProductOrdered();
+            $allCodesFromProduct = \CodesWholesale\Resource\Order::getCodes($productOrdered);
 
-            $codeList = $this->externalOrder->getCodes($productOrdered);
+            $orderId = $productOrdered->getOrderId();
 
-            $product = $this->retrieveExistingProduct($productOrdered);
-            $newKeys = $this->newKeysExtractor->extract($product, $codeList);
+            $item = $this->itemRetriever->retrieveItem($orderId);
+
+            $params = array('item' => $item, 'allCodesFromProduct' => $allCodesFromProduct);
+
+            $newKeys = $this->newKeysExtractor->extract($params);
 
             $this->eventDispatcher->dispatchEvent($newKeys);
 
-        } catch (ReceivePreOrderException $e) {
+        } catch (\Exception $e) {
 
-            die(self::ERROR_MESSAGE . $e->getMessage());
+            die('We found error. Probably this is the result of sending test POSTBACK. If your response status is: 200 OK
+             it means that you are successfully connected. Error: ' . $e->getMessage());
+
         }
     }
 
-    /**
-     * @param ProductOrdered $productOrdered
-     * @return InternalProduct
-     */
-    private function retrieveExistingProduct(ProductOrdered $productOrdered) {
-        $orderId = $productOrdered->getOrderId();
-        return $this->itemRetriever->retrieveItem($orderId);
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
     }
 }

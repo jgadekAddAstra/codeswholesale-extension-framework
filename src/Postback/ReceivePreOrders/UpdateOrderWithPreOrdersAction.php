@@ -18,48 +18,39 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 use CodesWholesaleFramework\Action;
-use CodesWholesaleFramework\Domain\Product;
 
 class UpdateOrderWithPreOrdersAction implements Action
 {
-    /**
-     * @var UpdateOrderWithPreOrders
-     */
     private $updateOrderWithPreOrders;
 
     /**
-     * @var array
+     * @var NewKeys
      */
     private $newKeys;
 
     /**
-     * UpdateOrderWithPreOrdersAction constructor.
-     * @param UpdateOrderWithPreOrders $updateOrderWithPreOrders
+     * @param $updateOrderWithPreOrders
      */
-    public function __construct(UpdateOrderWithPreOrders $updateOrderWithPreOrders){
+    public function __construct($updateOrderWithPreOrders){
+
         $this->updateOrderWithPreOrders = $updateOrderWithPreOrders;
     }
 
-    /**
-     * @return Product
-     */
     public function process(){
-        $textComment = $this->prepareMessage($this->newKeys);
-        return $this->updateOrderWithPreOrders->update($this->newKeys, $textComment);
+
+        $newKeys = $this->newKeys;
+
+        $textComment = 'PreOrder Codes to send: ' . ($newKeys['total'] - $newKeys['preOrdersLeft'] . '/' . $newKeys['total']);
+
+        $this->updateOrderWithPreOrders->update($newKeys, $textComment);
     }
 
     /**
-     * @param array $newKeys
-     * @return string
-     */
-    protected function prepareMessage(array $newKeys) {
-        return 'PreOrder Codes to send: ' . ($newKeys['total'] - $newKeys['preOrdersLeft'] . '/' . $newKeys['total']);
-    }
-
-    /**
-     * @param array $newKeys
+     * @param $newKeys
      */
     public function setKeys($newKeys){
         $this->newKeys = $newKeys;
     }
+
+
 }

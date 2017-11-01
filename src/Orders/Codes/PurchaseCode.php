@@ -1,6 +1,7 @@
 <?php
 
 namespace CodesWholesaleFramework\Orders\Codes;
+
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -19,42 +20,40 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-use CodesWholesaleFramework\Domain\PurchasedCodes;
-use CodesWholesaleFramework\Mappers\ExternalProduct;
-use CodesWholesaleFramework\Domain\ExternalOrder;
-use CodesWholesaleFramework\Utils\Links;
+use \CodesWholesale\Resource\Product;
+use \CodesWholesale\Resource\Order;
 
-class PurchaseCode implements Purchase {
-
+class PurchaseCode
+{
     /**
-     * @var ExternalOrder
+     * @param $cwProductId
+     * @param $qty
+     * @return array
      */
-    private $externalOrder;
-
-    /**
-     * PurchaseCode constructor.
-     * @param ExternalOrder $externalOrder
-     */
-    public function __construct(ExternalOrder $externalOrder)
+    public function purchase($cwProductId, $qty)
     {
-        $this->externalOrder = $externalOrder;
+        $cwProduct = Product::get($cwProductId);
+        $codes = Order::createBatchOrder($cwProduct, ['quantity' => $qty]);
+
+        $cwOrderId = $codes->getOrderId();
+
+        $numberOfPreOrders = 0;
+        $links = [];
+
+        foreach ($codes as $code) {
+
+            if ($code->isPreOrder()) {
+                $numberOfPreOrders++;
+            }
+
+            $links[] = $code->getHref();
+        }
+
+        return [
+            'cwOrderId' => $cwOrderId,
+            'links' => $links,
+            'numberOfPreOrders' => $numberOfPreOrders
+        ];
     }
 
-    /**
-     * @param ExternalProduct $externalProduct
-     * @param int $qty
-     * @return PurchasedCodes
-     */
-    public function purchase(ExternalProduct $externalProduct, $qty) {
-
-        $codes = $this->externalOrder->createBatchOrder($externalProduct, ['quantity' => $qty]);
-        $orderId = $codes->getOrderId();
-
-        $linksUtil = new Links($codes);
-
-        $links = $linksUtil->getLinksFromCodeList();
-        $numberOfPreOrders = $linksUtil->getNumberOfPreOrders();
-        
-        return new PurchasedCodes($orderId, $links, $numberOfPreOrders, date('c'));
-    }
 }

@@ -1,5 +1,4 @@
 <?php
-namespace CodesWholesaleFramework\Orders\Codes;
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -17,6 +16,33 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-interface OrderCreator{
-    function __construct($statusChange, $exportOrderToDataBase, $eventDispatcher, $itemRetriever, $errorHandler, $cwErrorHandler, $orderValidation);
+class OrderCreator
+{
+
+    public function createOrder($cwProductId, $item_qty)
+    {
+        $preOrdersPerItem = 0;
+
+        $cwProduct = \CodesWholesale\Resource\Product::get($cwProductId);
+        $codes = \CodesWholesale\Resource\Order::createBatchOrder($cwProduct, array('quantity' => $item_qty));
+
+        foreach ($codes as $code) {
+
+            if ($code->isPreOrder()) {
+
+                $preOrdersPerItem++;
+            }
+
+            $links[] = $code->getHref();
+        }
+        $createdOrderArray = array(
+            'counted_pre_orders' => $preOrdersPerItem,
+            'links' => $links,
+            'codes' => $codes
+        );
+
+        return $createdOrderArray;
+
+    }
+
 }

@@ -1,7 +1,5 @@
 <?php
 namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock;
-use CodesWholesaleFramework\Domain\Product;
-
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -20,12 +18,8 @@ use CodesWholesaleFramework\Domain\Product;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-interface ProductUpdater {
+interface ProductUpdater{
 
-    /**
-     * @param Product $product
-     * @param $priceWithSpread
-     * @return Product
-     */
-    function updateProduct(Product $product, $priceWithSpread);
+    function updateProduct($cwProductId, $quantity, $priceSpread, $price);
+
 }

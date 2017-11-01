@@ -1,7 +1,6 @@
 <?php
 
 namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
-
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -19,101 +18,60 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-use CodesWholesaleFramework\Domain\ExtractedKeys;
-use CodesWholesaleFramework\Postback\ExternalCodeList;
-use CodesWholesaleFramework\Postback\Extractor\NewKeysExtractor;
-use CodesWholesaleFramework\Postback\ImageWriter;
-use CodesWholesaleFramework\Postback\InternalProduct;
+use CodesWholesaleFramework\Postback\Extractor\NewKeysExtractorInterface;
 
-class NewKeysExtractorImpl implements NewKeysExtractor
+class NewKeysExtractorImpl implements NewKeysExtractorInterface
 {
-    const FILE_NAME = "cw_attachments";
-
     /**
-     * @var int
+     * @param $observer
+     * @return array
      */
-    private $numberOfKeysSent = 0;
+    public function extract($observer){
 
-    /**
-     * @var array
-     */
-    private $attachments = array();
+        $item = $observer['item'];
+        $codes = $observer['allCodesFromProduct'];
+        $numberOfKeysSent = 0;
 
-    /**
-     * @var array
-     */
-    private $linksToAdd = array();
+        $links = json_decode($item['links']);
+        $numberOfPreOrders = $item['number_of_preorders'];
 
-    /**
-     * @var ImageWriter
-     */
-    private $imageWriter;
+        $preOrdersToRemove = NewKeysExtractorImpl::getIndicesOfPreOrders($links, $codes);
+        $newCodes = NewKeysExtractorImpl::getNewCodes($links, $codes);
 
-    /**
-     * NewKeysExtractorImpl constructor.
-     * @param ImageWriter $imageWriter
-     */
-    public function __construct(ImageWriter $imageWriter)
-    {
-        $this->imageWriter = $imageWriter;
-    }
+        $attachments = array();
+        $linksToAdd = array();
 
-    /**
-     * @param InternalProduct $product
-     * @param ExternalCodeList $codeList
-     * @return ExtractedKeys
-     */
-    public function extract(InternalProduct $product, ExternalCodeList $codeList)
-    {
-        $links = json_decode($product->getLinks());
-        $numberOfPreOrders = $product->getNumberOfPreOrders();
-
-        $preOrdersToRemove = $this->getIndicesOfPreOrders($links, $codeList);
-        $newCodes = $this->getNewCodes($links, $codeList);
-
-        $this->writeImageCodes($newCodes, $links, $preOrdersToRemove);
-        $preOrdersLeft = $this->getNumberOfPreOrdersToSend($numberOfPreOrders);
-
-        $totalNumberOfLinks = $this->getTotalNumberOfLinks($links);
-
-        return new ExtractedKeys($product, $newCodes, $preOrdersLeft, $totalNumberOfLinks, $this->linksToAdd, $links, $this->attachments);
-    }
-
-    /**
-     * @param $links
-     * @return int
-     */
-    private function getTotalNumberOfLinks(array $links)
-    {
-        return (int) count($links);
-    }
-
-    private function writeImageCodes($newCodes, $links, $preOrdersToRemove)
-    {
         foreach ($newCodes as $code) {
 
             if ($code->isImage()) {
-                $this->attachments[] = $this->imageWriter->write($code, self::FILE_NAME);
+
+                $attachments[] = \CodesWholesale\Util\CodeImageWriter::write($code, 'Cw_Attachments');
             }
 
-            $this->deleteLinksAndPreOrders($links, $preOrdersToRemove);
+            unset($links[$preOrdersToRemove[0]]);
+            unset($preOrdersToRemove[0]);
 
-            $this->linksToAdd[] = $code->getHref();
-            $this->numberOfKeysSent++;
+            $preOrdersToRemove = array_values($preOrdersToRemove);
+            $linksToAdd[] = $code->getHref();
+
+            $numberOfKeysSent++;
         }
-    }
 
-    private function deleteLinksAndPreOrders($links, $preOrdersToRemove) {
-        unset($links[$preOrdersToRemove[0]]);
-        unset($preOrdersToRemove[0]);
-    }
+        $preOrdersLeft = ($numberOfPreOrders - $numberOfKeysSent);
 
-    /**
-     * @param $numberOfPreOrders
-     * @return int
-     */
-    private function getNumberOfPreOrdersToSend($numberOfPreOrders) {
-        return (int) ($numberOfPreOrders - $this->numberOfKeysSent);
+        $total = (count($links) + 1);
+
+        $keys[] = array(
+            'item' => $item,
+            'codes' => $newCodes,
+            'preOrdersLeft' => $preOrdersLeft,
+            'total' => $total,
+            'linksToAdd' => $linksToAdd,
+            'links' => $links,
+            'attachments' => $attachments
+        );
+
+       return $keys;
     }
 
     /**
@@ -121,7 +79,7 @@ class NewKeysExtractorImpl implements NewKeysExtractor
      * @param $codes
      * @return array
      */
-    private function getIndicesOfPreOrders($links, $codes)
+    private static function getIndicesOfPreOrders($links, $codes)
     {
         $indices = array();
 
@@ -147,7 +105,7 @@ class NewKeysExtractorImpl implements NewKeysExtractor
      * @param $codes
      * @return array
      */
-    private function getNewCodes($links, $codes)
+    private static function getNewCodes($links, $codes)
     {
         $newCodes = array();
         foreach ($codes as $code) {

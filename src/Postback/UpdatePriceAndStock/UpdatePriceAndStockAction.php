@@ -1,6 +1,6 @@
 <?php
-namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock;
 
+namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock;
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -19,113 +19,73 @@ namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 use CodesWholesaleFramework\Action;
-use CodesWholesale\Resource\ResourceError;
-use CodesWholesaleFramework\Connection\Client;
-use CodesWholesaleFramework\Exceptions\ProductIdIsSetException;
-use CodesWholesaleFramework\Mappers\ExternalProduct;
-use CodesWholesaleFramework\Mappers\ProductMapper;
-use CodesWholesaleFramework\Postback\PostBack;
-use CodesWholesaleFramework\Postback\Retriever\ExternalProductRetriever;
-use CodesWholesaleFramework\Postback\Retriever\SpreadRetriever;
-use \CodesWholesaleFramework\Domain\Product;
+use CodesWholesaleFramework\PostBack\UpdatePriceAndStock\Utils\UpdatePriceAndStockInterface;
+use CodesWholesaleFramework\Postback\UpdatePriceAndStock\SpreadCalculator;
 
-class UpdatePriceAndStockAction extends PostBack implements Action
+class UpdatePriceAndStockAction implements Action
 {
-    /**
-     * @var string
-     */
-    public $input;
-
     /**
      * @var ProductUpdater
      */
     private $productUpdater;
 
-    /**
-     * @var Client
-     */
-    private $client;
+    private $connection;
 
-    /**
-     * @var string
-     */
-    private $cwProductId = null;
+    private $cwProductId;
 
-    /**
-     * @var SpreadRetriever
-     */
-    private $spreadRetriever;
+    private $spreadParams;
 
-    /**
-     * @var SpreadCalculatorImpl
-     */
     private $spreadCalculator;
 
-    /**
-     * @var ExternalProductRetriever
-     */
-    private $product;
 
-    /**
-     * UpdatePriceAndStockAction constructor.
-     * @param ProductUpdater $productUpdater
-     * @param SpreadRetriever $spreadRetriever
-     * @param ExternalProductRetriever $product
-     * @param SpreadCalculator $spreadCalculator
-     * @param Client $client
-     */
-    public function __construct(ProductUpdater $productUpdater, SpreadRetriever $spreadRetriever,
-                                ExternalProductRetriever $product, SpreadCalculator $spreadCalculator, Client $client)
+    public function __construct($productUpdater, $spreadParams)
     {
         $this->productUpdater = $productUpdater;
-        $this->spreadRetriever = $spreadRetriever;
-        $this->spreadCalculator = $spreadCalculator;
-        $this->product = $product;
-        $this->client = $client;
+
+        $this->spreadParams = $spreadParams;
+
+        $this->spreadCalculator = new SpreadCalculator();
     }
 
-    /**
-     * @return Product
-     * @throws ProductIdIsSetException
-     */
     public function process()
     {
-        $this->productIdIsSet();
-        $this->isEmptyRequest();
+        if ($this->cwProductId == null) {
 
-        $productId = $this->client->receiveUpdatedProductId();
-        $product = $this->getProductById($productId);
+            $request = file_get_contents('php://input');
 
-        $mapper = new ProductMapper($product);
-        $mappedProduct = $mapper->map();
-        
-        $spreadParams = $this->spreadRetriever->getSpreadParams();
-        $priceWithSpread = $this->spreadCalculator->calculateSpread($spreadParams, $mappedProduct->getPrice());
+            if (empty($request)) {
 
-        return $this->productUpdater->updateProduct($mappedProduct, $priceWithSpread);
-    }
+                die("No request data");
+            }
 
-    /**
-     * @throws ProductIdIsSetException
-     */
-    private function productIdIsSet()
-    {
-        if ($this->cwProductId) {
-            throw new ProductIdIsSetException;
+            $cwProductId = $this->connection->receiveUpdatedProductId();
+
         }
-    }
 
-    /**
-     * @param $productId
-     * @return ExternalProduct
-     */
-    private function getProductById($productId)
-    {
         try {
-            $product = $this->product->getProductById($productId);
-            return $product;
-        } catch (ResourceError $e) {
-            die('Received product id: ' . $this->cwProductId . ' Error: ' . $e->getMessage());
+
+            $product = \CodesWholesale\Resource\Product::get($cwProductId);
+
+        } catch (\CodesWholesale\Resource\ResourceError $e) {
+
+            die("Received product id: " . $cwProductId . " Error: " . $e->getMessage());
         }
+
+        $quantity = $product->getStockQuantity();
+        $price = $product->getLowestPrice();
+
+        $priceSpread = $this->spreadCalculator->calculateSpread($this->spreadParams->getSpreadParams(), $price);
+
+        $this->productUpdater->updateProduct($cwProductId, $quantity , $priceSpread, $price);
+    }
+
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
+    }
+
+    public function setProductId($cwProductId)
+    {
+        $this->cwProductId = $cwProductId;
     }
 }

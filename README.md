@@ -1,3 +1,2 @@
-# CodesWholesale Extension Framework
-The CodesWholesale Extension Framework is simple package of logic to CodesWholesales Plugins.
-
+# codeswholesale-extension-framework
+The CodesWholesale Extension Framework

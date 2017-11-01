@@ -18,28 +18,29 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 use CodesWholesaleFramework\Action;
-use CodesWholesale\Resource\Code;
-use CodesWholesale\Util\CodeImageWriter;
 
 class SendCodesAction implements Action
 {
+    /**
+     * @var
+     */
     private $orderDetails;
-
+    /**
+     * @var
+     */
     private $sendCodeMail;
-
+    /**
+     * @var
+     */
     private $setStatus;
-
+    /**
+     * @var
+     */
     private $observerDispatcher;
 
     private $getLinks;
 
-    /**
-     * SendCodesAction constructor.
-     * @param $observerDispatcher
-     * @param $sendCodeMail
-     * @param $setStatus
-     * @param $getLinks
-     */
+
     public function __construct($observerDispatcher, $sendCodeMail, $setStatus, $getLinks)
     {
         $this->observerDispatcher = $observerDispatcher;
@@ -78,7 +79,7 @@ class SendCodesAction implements Action
 
         foreach ($orderDetails['orderedItems'] as $item_key => $item) {
 
-            $links = $this->getLinks->links($item, $item_key);
+            $links = $this->getLinks->links($item, $item_key, $orderDetails);
 
             $codes = array();
 
@@ -86,11 +87,11 @@ class SendCodesAction implements Action
 
                 foreach ($links as $link) {
 
-                    $code = Code::get($link);
+                    $code = \CodesWholesale\Resource\Code::get($link);
 
                     if ($code->isImage()) {
 
-                        $attachments[] = CodeImageWriter::write($code, 'cw_attachments');
+                        $attachments[] = \CodesWholesale\Util\CodeImageWriter::write($code, 'Cw_Attachments');
                     }
 
                     if ($code->isPreOrder()) {
@@ -123,6 +124,7 @@ class SendCodesAction implements Action
     {
         foreach ($attachments as $attachment) {
             if (file_exists($attachment)) {
+
                 unlink($attachment);
             }
         }

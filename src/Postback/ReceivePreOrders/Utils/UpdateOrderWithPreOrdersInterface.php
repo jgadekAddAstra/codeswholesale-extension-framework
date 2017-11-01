@@ -1,12 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maciejklowan
- * Date: 07/07/15
- * Time: 16:14
- */
 
-namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
+namespace CodesWholesaleFramework\Postback\ReceivePreOrders\Utils;
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -25,8 +19,7 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-interface EventDispatcher {
+interface UpdateOrderWithPreOrdersInterface{
 
-    function dispatchEvent(array $newKeys);
-
+    function update($newKeys, $textComment);
 }

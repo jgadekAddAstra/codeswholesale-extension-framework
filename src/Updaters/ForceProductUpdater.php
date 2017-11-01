@@ -9,7 +9,6 @@
 namespace CodesWholesaleFramework\Updaters;
 
 use CodesWholesale\Resource\ProductList;
-use CodesWholesaleFramework\Domain\SpreadData;
 use CodesWholesaleFramework\Exceptions\ForceUpdateException;
 use CodesWholesaleFramework\Postback\UpdatePriceAndStock\SpreadCalculator;
 
@@ -25,41 +24,35 @@ class ForceUpdater
     private $cwPriceList;
 
     /**
-     * @var SpreadData
+     * @var array
      */
-    private $spreadData;
+    private $spreadParams;
 
     /**
      * @var SpreadCalculator
      */
     private $spreadCalculator;
 
-    /**
-     * @var array
-     */
     private $productList;
 
-    /**
-     * @var PriceAndStockUpdater
-     */
-    private $priceAndStockUpdater;
-
+    private $stockAndPriceUpdater;
+    
     /**
      * ForceUpdater constructor.
      * @param ProductList $cwPriceList
      * @param array $productList
-     * @param PriceAndStockUpdater $priceAndStockUpdater
-     * @param SpreadData $spreadData
+     * @param $stockAndPriceUpdater
+     * @param array $spreadParams
      * @param SpreadCalculator $spreadCalculator
      * @param $storeName
      */
-    public function __construct(ProductList $cwPriceList, array $productList, PriceAndStockUpdater $priceAndStockUpdater,
-                                SpreadData $spreadData, SpreadCalculator $spreadCalculator, $storeName)
+    public function __construct(ProductList $cwPriceList, array $productList, $stockAndPriceUpdater,
+                                array $spreadParams, SpreadCalculator $spreadCalculator, $storeName)
     {
         $this->cwPriceList = $cwPriceList;
         $this->productList = $productList;
-        $this->priceAndStockUpdater = $priceAndStockUpdater;
-        $this->spreadData = $spreadData;
+        $this->stockAndPriceUpdater = $stockAndPriceUpdater;
+        $this->spreadParams = $spreadParams;
         $this->spreadCalculator = $spreadCalculator;
         $this->storeName = $storeName;
     }
@@ -78,26 +71,16 @@ class ForceUpdater
             foreach ($this->productList as $product) {
 
                 $productData = $cwPriceListMap[$product->getCwProductId()];
-
-                $priceSpread = $this->spreadCalculator->calculateSpread(
-                    $this->spreadData,
-                    $productData['price']
-                );
-
-                $this->priceAndStockUpdater->updateProduct(
-                    $product->getCwProductId(),
-                    $productData['stock'],
-                    $priceSpread,
+                $this->stockAndPriceUpdater->updateProduct($product->getCwProductId(), $productData['stock'],
+                    $this->spreadCalculator->calculateSpread($this->spreadParams, $productData['price']),
                     $this->storeName
                 );
-
                 $updatedProducts++;
             }
 
             return ['status' => 200, 'updatedProducts' => intval($updatedProducts)];
 
         } catch (ForceUpdateException $e) {
-
             return ['status' => 500, 'message' => $e->getMessage()];
         }
     }

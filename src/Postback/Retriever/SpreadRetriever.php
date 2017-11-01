@@ -7,8 +7,6 @@
  */
 
 namespace CodesWholesaleFramework\Postback\Retriever;
-use CodesWholesaleFramework\Domain\SpreadData;
-
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -27,10 +25,8 @@ use CodesWholesaleFramework\Domain\SpreadData;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-interface SpreadRetriever
-{
-    /**
-     * @return SpreadData
-     */
-    public function getSpreadParams();
+interface SpreadRetriever {
+
+function getSpreadParams($storeName);
+
 }

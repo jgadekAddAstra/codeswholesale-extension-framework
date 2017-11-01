@@ -1,5 +1,4 @@
 <?php
-
 namespace CodesWholesaleFramework\Orders\Codes;
 
 /**
@@ -19,27 +18,27 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-use CodesWholesale\Resource\ResourceError;
+use CodesWholesale\Client;
 use CodesWholesaleFramework\Action;
-use CodesWholesaleFramework\Connection\Client;
-use CodesWholesaleFramework\Domain\Order;
 use CodesWholesaleFramework\Errors\ErrorHandler;
-use CodesWholesaleFramework\Exceptions\EmptyOrderDataException;
-use CodesWholesaleFramework\Mappers\ExternalProduct;
+use CodesWholesaleFramework\Orders\Utils\CodesProcessor;
+use CodesWholesaleFramework\Orders\Utils\DataBaseExporter;
+use CodesWholesaleFramework\Errors\Errors;
+use CodesWholesaleFramework\Orders\Utils\StatusService;
 use CodesWholesaleFramework\Postback\ReceivePreOrders\EventDispatcher;
 use CodesWholesaleFramework\Postback\Retriever\ItemRetriever;
+use \CodesWholesale\Resource\ResourceError;
 
 class OrderCreatorAction implements Action
 {
     /**
-     * @var StatusChange
+     * @var StatusService
      */
-    private $statusChange;
+    private $statusService;
     /**
      * @var DataBaseExporter
      */
-    private $exportToDataBase;
+    private $databaseExporter;
     /**
      * @var EventDispatcher
      */
@@ -47,113 +46,93 @@ class OrderCreatorAction implements Action
     /**
      * @var PurchaseCode
      */
-    private $purchaseCode;
+    private $codesPurchaser;
     /**
      * @var ItemRetriever
      */
     private $itemRetriever;
-
-    /**
-     * @var OrderValidation
-     */
-    private $orderValidation;
-    /**
-     * @var Client
-     */
-    private $client;
-
-    /**
-     * @var ExternalProduct
-     */
-    private $externalProduct;
-
-    /**
-     * @var Order
-     */
-    private $order;
-
     /**
      * @var ErrorHandler
      */
+    private $sendErrorMail;
+    /**
+     * @var ErrorHandler
+     */
+    private $sendCwErrorMail;
+    /**
+     * @var CodesProcessor
+     */
+    private $codesProcessor;
+
+    private $status;
+
+    private $client;
+
+    /**
+     * @var Errors
+     */
     private $errorHandler;
 
-    /**
-     * OrderCreatorAction constructor.
-     * @param StatusChange $statusChange
-     * @param DataBaseExporter $exportOrderToDataBase
-     * @param EventDispatcher $eventDispatcher
-     * @param Purchase $purchase
-     * @param ItemRetriever $itemRetriever
-     * @param OrderValidation $orderValidation
-     * @param Client $client
-     * @param ExternalProduct $product
-     * @param Order $order
-     * @param ErrorHandler $errorHandler
-     */
-    public function __construct(StatusChange $statusChange, DataBaseExporter $exportOrderToDataBase, EventDispatcher $eventDispatcher,
-                                Purchase $purchase, ItemRetriever $itemRetriever, OrderValidation $orderValidation, Client $client,
-                                ExternalProduct $product, Order $order, ErrorHandler $errorHandler)
+    public function __construct(StatusService $statusService, DataBaseExporter $dataBaseExporter, EventDispatcher $eventDispatcher,
+                                ItemRetriever $itemRetriever, ErrorHandler $sendErrorMail, ErrorHandler $sendCwErrorMail,
+                                CodesProcessor $codesProcessor, Client $client)
     {
-        $this->statusChange = $statusChange;
-        $this->exportToDataBase = $exportOrderToDataBase;
+        $this->statusService = $statusService;
+        $this->databaseExporter = $dataBaseExporter;
         $this->eventDispatcher = $eventDispatcher;
-        $this->purchaseCode = $purchase;
+        $this->codesPurchaser = new PurchaseCode();
         $this->itemRetriever = $itemRetriever;
-        $this->orderValidation = $orderValidation;
+        $this->sendErrorMail = $sendErrorMail;
+        $this->sendCwErrorMail = $sendCwErrorMail;
+        $this->codesProcessor = $codesProcessor;
+        $this->errorHandler = new Errors($this->sendErrorMail, $this->sendCwErrorMail);
         $this->client = $client;
-        $this->externalProduct = $product;
-        $this->order = $order;
-        $this->errorHandler = $errorHandler;
     }
-    
+
+    public function setCurrentStatus($status)
+    {
+        $this->status = $status;
+    }
+
     public function process()
     {
-        try {
+        $error = null;
+        $numberOfPreOrders = 0;
 
-            $this->statusChange->checkStatus($this->order);
-            $this->proceedPurchase();
+        $orderDetails = $this->statusService->checkStatus($this->status);
 
-            $this->eventDispatcher->dispatchEvent($this->order);
+        foreach ($orderDetails['orderedItems'] as $itemKey => $item) {
 
-        } catch (ResourceError $e) {
+            try {
 
-            $this->errorHandler->handleError($e);
-            
+                $retrievedItems = $this->itemRetriever->retrieveItem([
+                    'item' => $item,
+                    'order' => $orderDetails['order']
+                ]);
+
+                $orderedCodes = $this->codesPurchaser->purchase($retrievedItems['cwProductId'], $retrievedItems['qty']);
+
+                if($orderedCodes['numberOfPreOrders'] > 0) {
+                    $numberOfPreOrders++;
+                }
+
+                $this->databaseExporter->export($item, $orderedCodes, $itemKey, $orderDetails['orderId']);
+
+            } catch (ResourceError $e) {
+                $this->errorHandler->supportResourceError($e, $orderDetails['order']);
+                $error = $e;
+            } catch (\Exception $e) {
+                $this->errorHandler->supportError($e, $orderDetails['order']);
+                $error = $e;
+            }
         }
-    }
 
-    private function proceedPurchase()
-    {
-        foreach ($this->order->getOrderedItems() as $itemKey => $item) {
-
-            $internalProduct = $this->itemRetriever->retrieveItem($this->order->getId());
-            $externalProduct = $this->externalProduct->get($internalProduct->getExternalItemId());
-
-            $orderedCodes = $this->purchaseCode->purchase($externalProduct,  $internalProduct->getQuantity());
-
-            $this->exportToDataBase->export($item, $orderedCodes, $itemKey);
+        if($numberOfPreOrders > 0) {
+            $this->codesProcessor->process($orderDetails['order']);
         }
 
-        $this->validatePurchase();
-    }
+        $this->eventDispatcher->dispatchEvent($orderDetails);
 
-    /**
-     * @throws EmptyOrderDataException
-     */
-    private function validatePurchase()
-    {
-        $validatedOrder = $this->orderValidation->validatePurchase($this->order, $this->client);
-        $this->isNotNull($validatedOrder);
-    }
-
-    /**
-     * @param Order $order
-     * @throws EmptyOrderDataException
-     */
-    protected function isNotNull(Order $order)
-    {
-        if(empty($order)){
-            throw new EmptyOrderDataException();
-        }
+        return $error != null;
     }
 }

@@ -1,12 +1,12 @@
 <?php
+
+namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock\Utils;
 /**
  * Created by PhpStorm.
  * User: maciejklowan
  * Date: 07/07/15
- * Time: 16:14
+ * Time: 14:42
  */
-
-namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -25,8 +25,7 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-interface EventDispatcher {
-
-    function dispatchEvent(array $newKeys);
-
+interface UpdatePriceAndStockInterface{
+    
+    function updateProduct($cwProductId, $quantity , $priceSpread);
 }

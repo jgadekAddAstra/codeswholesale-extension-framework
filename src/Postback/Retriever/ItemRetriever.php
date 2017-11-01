@@ -1,8 +1,6 @@
 <?php
 
 namespace CodesWholesaleFramework\Postback\Retriever;
-use CodesWholesaleFramework\Postback\InternalProduct;
-
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -20,11 +18,7 @@ use CodesWholesaleFramework\Postback\InternalProduct;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-interface ItemRetriever{
-
-    /**
-     * @param $orderId
-     * @return InternalProduct
-     */
+interface ItemRetriever
+{
     function retrieveItem($orderId);
 }

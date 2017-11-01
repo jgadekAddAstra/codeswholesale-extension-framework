@@ -1,14 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maciejklowan
- * Date: 08/07/15
- * Time: 15:17
- */
-
 namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock;
-use CodesWholesaleFramework\Domain\SpreadData;
-
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -26,7 +17,23 @@ use CodesWholesaleFramework\Domain\SpreadData;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+use CodesWholesaleFramework\Postback\UpdatePriceAndStock\Utils\SpreadCalculatorInterface;
 
-interface SpreadCalculator {
-    function calculateSpread(SpreadData $spreadParams, $price);
+class SpreadCalculator implements SpreadCalculatorInterface
+{
+    public function calculateSpread(array $spreadParams, $price)
+    {
+
+        if ($spreadParams['cwSpreadType'] == 0) {
+
+            $priceSpread = $price + $spreadParams['cwSpread'];
+
+        } else if ($spreadParams['cwSpreadType'] == 1) {
+
+            $result = $price / 100 * $spreadParams['cwSpread'] + $price;
+            $priceSpread = round($result, 2);
+        }
+
+        return $priceSpread;
+    }
 }
