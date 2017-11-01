@@ -23,6 +23,7 @@ use CodesWholesale\CodesWholesale;
 use CodesWholesale\ClientBuilder;
 use CodesWholesaleFramework\Domain\Product;
 use fkooman\OAuth\Client\PdoStorage;
+use CodesWholesale\Client;
 
 class ConnectionImpl implements Connection {
 

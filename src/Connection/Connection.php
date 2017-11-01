@@ -12,7 +12,13 @@ interface Connection
 {
     /**
      * @param array $options
+     *
      * @return Client
      */
     public static function getConnection(array $options);
+
+    /**
+     * @return boolean
+     */
+    public static function hasConnection();
 }
