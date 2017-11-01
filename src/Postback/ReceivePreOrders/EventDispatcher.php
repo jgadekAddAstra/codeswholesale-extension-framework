@@ -7,6 +7,7 @@
  */
 
 namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
+
 use CodesWholesaleFramework\Domain\Order;
 
 /**

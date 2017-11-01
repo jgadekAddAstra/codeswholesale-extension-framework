@@ -1,5 +1,7 @@
 <?php
+
 namespace CodesWholesaleFramework\Orders\Codes;
+
 use CodesWholesaleFramework\Domain\Order;
 
 /**

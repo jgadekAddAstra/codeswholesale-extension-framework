@@ -7,6 +7,7 @@
  */
 
 namespace CodesWholesaleFramework\Connection;
+
 use \CodesWholesaleFramework\Postback\ReceivePreOrders\ProductOrdered;
 
 interface Client
