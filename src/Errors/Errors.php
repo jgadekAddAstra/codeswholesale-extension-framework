@@ -19,6 +19,9 @@ namespace CodesWholesaleFramework\Errors;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/**
+ * Class Errors
+ */
 class Errors
 {
     /**
@@ -69,14 +72,15 @@ class Errors
 
                             $this->sendAdminErrorMail->handleError($order, 'Quantity less then 1', $e);
                         } else {
-                            $this->supportError($e, $order);
+                            $this->supportError($order, $e);
                         }
     }
 
-    /*
-     * Support another exception's
+    /**
+     * @param            $order
+     * @param \Exception $e
      */
-    public function supportError($e, $order)
+    public function supportError($order, \Exception $e)
     {
         return $this->sendAdminGeneralErrorMail->handleError($order, 'Issue', $e);
     }

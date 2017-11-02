@@ -18,8 +18,14 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+use CodesWholesale\Client;
 use CodesWholesaleFramework\Action;
+use CodesWholesaleFramework\Postback\Retriever\ItemRetriever;
+use CodesWholesale\Resource\Order;
 
+/**
+ * Class ReceivePreOrdersAction
+ */
 class ReceivePreOrdersAction implements Action
 {
     /**
@@ -32,8 +38,14 @@ class ReceivePreOrdersAction implements Action
      */
     private $newKeysExtractor;
 
+    /**
+     * @var EventDispatcher
+     */
     private $eventDispatcher;
 
+    /**
+     * @var Client
+     */
     private $connection;
 
     /**
@@ -60,7 +72,7 @@ class ReceivePreOrdersAction implements Action
 
             $productOrdered = $this->connection->receiveProductOrdered();
 
-            $allCodesFromProduct = \CodesWholesale\Resource\Order::getCodes($productOrdered);
+            $allCodesFromProduct = Order::getCodes($productOrdered);
 
             $orderId = $productOrdered->getOrderId();
 

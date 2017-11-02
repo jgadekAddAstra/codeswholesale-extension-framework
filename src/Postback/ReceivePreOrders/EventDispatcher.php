@@ -25,8 +25,13 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-interface EventDispatcher {
-
-    function dispatchEvent(array $newKeys);
+interface EventDispatcher
+{
+    /**
+     * @param array $newKeys
+     *
+     * @return mixed
+     */
+    public function dispatchEvent(array $newKeys);
 
 }

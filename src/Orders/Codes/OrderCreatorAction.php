@@ -29,6 +29,9 @@ use CodesWholesaleFramework\Postback\ReceivePreOrders\EventDispatcher;
 use CodesWholesaleFramework\Postback\Retriever\ItemRetriever;
 use \CodesWholesale\Resource\ResourceError;
 
+/**
+ * Class OrderCreatorAction
+ */
 class OrderCreatorAction implements Action
 {
     /**
@@ -73,9 +76,28 @@ class OrderCreatorAction implements Action
      */
     private $errorHandler;
 
-    public function __construct(StatusService $statusService, DataBaseExporter $dataBaseExporter, EventDispatcher $eventDispatcher,
-                                ItemRetriever $itemRetriever, ErrorHandler $sendErrorMail, ErrorHandler $sendCwErrorMail,
-                                CodesProcessor $codesProcessor, Client $client)
+    /**
+     * OrderCreatorAction constructor.
+     *
+     * @param StatusService    $statusService
+     * @param DataBaseExporter $dataBaseExporter
+     * @param EventDispatcher  $eventDispatcher
+     * @param ItemRetriever    $itemRetriever
+     * @param ErrorHandler     $sendErrorMail
+     * @param ErrorHandler     $sendCwErrorMail
+     * @param CodesProcessor   $codesProcessor
+     * @param Client           $client
+     */
+    public function __construct(
+        StatusService $statusService,
+        DataBaseExporter $dataBaseExporter,
+        EventDispatcher $eventDispatcher,
+        ItemRetriever $itemRetriever,
+        ErrorHandler $sendErrorMail,
+        ErrorHandler $sendCwErrorMail,
+        CodesProcessor $codesProcessor,
+        Client $client
+    )
     {
         $this->statusService = $statusService;
         $this->databaseExporter = $dataBaseExporter;
@@ -89,11 +111,17 @@ class OrderCreatorAction implements Action
         $this->client = $client;
     }
 
+    /**
+     * @param $status
+     */
     public function setCurrentStatus($status)
     {
         $this->status = $status;
     }
 
+    /**
+     * @return bool
+     */
     public function process()
     {
         $error = null;
@@ -123,7 +151,7 @@ class OrderCreatorAction implements Action
                 $this->errorHandler->supportResourceError($e, $orderDetails['order']);
                 $error = $e;
             } catch (\Exception $e) {
-                $this->errorHandler->supportError($e, $orderDetails['order']);
+                $this->errorHandler->supportError($orderDetails['order'], $e);
                 $error = $e;
             }
         }
