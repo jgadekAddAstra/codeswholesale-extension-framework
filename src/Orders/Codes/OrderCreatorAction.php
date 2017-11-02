@@ -21,14 +21,13 @@ namespace CodesWholesaleFramework\Orders\Codes;
  */
 use CodesWholesale\Client;
 use CodesWholesaleFramework\Model\InternalOrder;
+use CodesWholesaleFramework\Postback\ReceivePreOrders\EventDispatcherInternalOrder;
 use CodesWholesaleFramework\Visitor\VisitorInterface;
 use CodesWholesaleFramework\Action;
 use CodesWholesaleFramework\Errors\ErrorHandler;
 use CodesWholesaleFramework\Orders\Utils\CodesProcessor;
 use CodesWholesaleFramework\Orders\Utils\DataBaseExporter;
 use CodesWholesaleFramework\Errors\Errors;
-use CodesWholesaleFramework\Orders\Utils\StatusService;
-use CodesWholesaleFramework\Postback\ReceivePreOrders\EventDispatcher;
 use CodesWholesaleFramework\Postback\Retriever\ItemRetriever;
 use \CodesWholesale\Resource\ResourceError;
 
@@ -38,39 +37,39 @@ use \CodesWholesale\Resource\ResourceError;
 class OrderCreatorAction implements Action
 {
     /**
-     * @var StatusService
-     */
-    private $statusService;
-    /**
      * @var DataBaseExporter
      */
     private $databaseExporter;
+
     /**
-     * @var EventDispatcher
+     * @var EventDispatcherInternalOrder
      */
     private $eventDispatcher;
+
     /**
      * @var PurchaseCode
      */
     private $codesPurchaser;
+
     /**
      * @var ItemRetriever
      */
     private $itemRetriever;
+
     /**
      * @var ErrorHandler
      */
     private $sendErrorMail;
+
     /**
      * @var ErrorHandler
      */
     private $sendCwErrorMail;
+
     /**
      * @var CodesProcessor
      */
     private $codesProcessor;
-
-    private $status;
 
     /**
      * @var Errors
@@ -95,21 +94,19 @@ class OrderCreatorAction implements Action
     /**
      * OrderCreatorAction constructor.
      *
-     * @param StatusService    $statusService
-     * @param VisitorInterface $internalOrderVisitor
-     * @param DataBaseExporter $dataBaseExporter
-     * @param EventDispatcher  $eventDispatcher
-     * @param ItemRetriever    $itemRetriever
-     * @param ErrorHandler     $sendErrorMail
-     * @param ErrorHandler     $sendCwErrorMail
-     * @param CodesProcessor   $codesProcessor
-     * @param Client           $client
+     * @param VisitorInterface             $internalOrderVisitor
+     * @param DataBaseExporter             $dataBaseExporter
+     * @param EventDispatcherInternalOrder $eventDispatcher
+     * @param ItemRetriever                $itemRetriever
+     * @param ErrorHandler                 $sendErrorMail
+     * @param ErrorHandler                 $sendCwErrorMail
+     * @param CodesProcessor               $codesProcessor
+     * @param Client                       $client
      */
     public function __construct(
-        StatusService $statusService,
         VisitorInterface $internalOrderVisitor,
         DataBaseExporter $dataBaseExporter,
-        EventDispatcher $eventDispatcher,
+        EventDispatcherInternalOrder $eventDispatcher,
         ItemRetriever $itemRetriever,
         ErrorHandler $sendErrorMail,
         ErrorHandler $sendCwErrorMail,
@@ -117,7 +114,6 @@ class OrderCreatorAction implements Action
         Client $client
     )
     {
-        $this->statusService = $statusService;
         $this->internalOrderVisitor = $internalOrderVisitor;
         $this->databaseExporter = $dataBaseExporter;
         $this->eventDispatcher = $eventDispatcher;
@@ -128,14 +124,6 @@ class OrderCreatorAction implements Action
         $this->codesProcessor = $codesProcessor;
         $this->errorHandler = new Errors($this->sendErrorMail, $this->sendCwErrorMail);
         $this->client = $client;
-    }
-
-    /**
-     * @param $status
-     */
-    public function setCurrentStatus($status)
-    {
-        $this->status = $status;
     }
 
     /**
@@ -163,7 +151,6 @@ class OrderCreatorAction implements Action
         $item = null;
         $numberOfPreOrders = 0;
 
-        $orderDetails = $this->statusService->checkStatus($this->status);
         $this->getInternalOrder()->accept($this->internalOrderVisitor);
 
         foreach ($this->getInternalOrder()->getItems() as $itemKey => $item) {
@@ -184,7 +171,7 @@ class OrderCreatorAction implements Action
                 $this->databaseExporter->export($item, $orderedCodes, $itemKey, $this->getInternalOrder()->getId());
 
             } catch (ResourceError $e) {
-                $this->errorHandler->supportResourceError($e, $this->getInternalOrder()->getOrder());
+                $this->errorHandler->supportResourceError($this->getInternalOrder()->getOrder(), $e);
                 $error = $e;
             } catch (\Exception $e) {
                 $this->errorHandler->supportError($this->getInternalOrder()->getOrder(), $e);
@@ -196,7 +183,7 @@ class OrderCreatorAction implements Action
             $this->codesProcessor->process($this->getInternalOrder(), $numberOfPreOrders, $error, $item);
         }
 
-        $this->eventDispatcher->dispatchEvent($orderDetails);
+        $this->eventDispatcher->dispatch($this->getInternalOrder());
 
         return $error != null;
     }

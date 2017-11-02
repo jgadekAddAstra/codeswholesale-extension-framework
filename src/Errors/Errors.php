@@ -19,6 +19,8 @@ namespace CodesWholesaleFramework\Errors;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+use CodesWholesale\Resource\ResourceError;
+
 /**
  * Class Errors
  */
@@ -44,7 +46,7 @@ class Errors
     /*
      *   Error support
      */
-    public function supportResourceError($e, $order)
+    public function supportResourceError($order, ResourceError $e)
     {
 
         if ($e->isInvalidToken()) {
