@@ -20,8 +20,8 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 use CodesWholesale\Client;
-use CodesWholesale\Model\InternalOrder;
-use CodesWholesale\Visitor\VisitorInterface;
+use CodesWholesaleFramework\Model\InternalOrder;
+use CodesWholesaleFramework\Visitor\VisitorInterface;
 use CodesWholesaleFramework\Action;
 use CodesWholesaleFramework\Errors\ErrorHandler;
 use CodesWholesaleFramework\Orders\Utils\CodesProcessor;

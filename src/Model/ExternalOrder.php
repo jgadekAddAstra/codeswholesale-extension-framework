@@ -1,6 +1,6 @@
 <?php
 
-namespace CodesWholesale\Model;
+namespace CodesWholesaleFramework\Model;
 
 /**
  * Class ExternalOrder

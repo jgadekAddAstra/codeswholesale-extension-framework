@@ -1,8 +1,9 @@
 <?php
 
-namespace CodesWholesale\Model;
-use CodesWholesale\Visitor\VisitorAwareInterface;
-use CodesWholesale\Visitor\VisitorInterface;
+namespace CodesWholesaleFramework\Model;
+
+use CodesWholesaleFramework\Visitor\VisitorAwareInterface;
+use CodesWholesaleFramework\Visitor\VisitorInterface;
 
 /**
  * Class InternalOrder

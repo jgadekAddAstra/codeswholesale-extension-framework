@@ -1,8 +1,8 @@
 <?php
 
-namespace CodesWholesale\Provider;
+namespace CodesWholesaleFramework\Provider;
 
-use CodesWholesale\Model\InternalOrder;
+use CodesWholesaleFramework\Model\InternalOrder;
 
 /**
  * Class InternalOrderProvider

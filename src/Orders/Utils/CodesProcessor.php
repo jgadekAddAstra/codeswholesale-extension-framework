@@ -1,6 +1,8 @@
 <?php
+
 namespace CodesWholesaleFramework\Orders\Utils;
-use CodesWholesale\Model\InternalOrder;
+
+use CodesWholesaleFramework\Model\InternalOrder;
 
 /**
  *   This file is part of codeswholesale-plugin-framework.
