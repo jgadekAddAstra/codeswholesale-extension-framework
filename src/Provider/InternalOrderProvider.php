@@ -14,7 +14,7 @@ class InternalOrderProvider
      *
      * @return InternalOrder
      */
-    public function generateById(int $orderId): InternalOrder
+    public static function generateById(int $orderId): InternalOrder
     {
         return new InternalOrder($orderId);
     }
