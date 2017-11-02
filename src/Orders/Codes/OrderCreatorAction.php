@@ -118,6 +118,7 @@ class OrderCreatorAction implements Action
     )
     {
         $this->statusService = $statusService;
+        $this->internalOrderVisitor = $internalOrderVisitor;
         $this->databaseExporter = $dataBaseExporter;
         $this->eventDispatcher = $eventDispatcher;
         $this->codesPurchaser = new PurchaseCode();
@@ -126,7 +127,6 @@ class OrderCreatorAction implements Action
         $this->sendCwErrorMail = $sendCwErrorMail;
         $this->codesProcessor = $codesProcessor;
         $this->errorHandler = new Errors($this->sendErrorMail, $this->sendCwErrorMail);
-        $this->internalOrderVisitor = $internalOrderVisitor;
         $this->client = $client;
     }
 
