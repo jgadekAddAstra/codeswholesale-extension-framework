@@ -1,4 +1,5 @@
 <?php
+
 namespace CodesWholesaleFramework\Orders\Codes;
 
 /**
@@ -19,6 +20,8 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 use CodesWholesale\Client;
+use CodesWholesale\Model\InternalOrder;
+use CodesWholesale\Visitor\VisitorInterface;
 use CodesWholesaleFramework\Action;
 use CodesWholesaleFramework\Errors\ErrorHandler;
 use CodesWholesaleFramework\Orders\Utils\CodesProcessor;
@@ -69,17 +72,31 @@ class OrderCreatorAction implements Action
 
     private $status;
 
-    private $client;
-
     /**
      * @var Errors
      */
     private $errorHandler;
 
     /**
+     * @var VisitorInterface
+     */
+    private $internalOrderVisitor;
+
+    /**
+     * @var Client
+     */
+    private $client;
+
+    /**
+     * @var InternalOrder
+     */
+    protected $internalOrder;
+
+    /**
      * OrderCreatorAction constructor.
      *
      * @param StatusService    $statusService
+     * @param VisitorInterface $internalOrderVisitor
      * @param DataBaseExporter $dataBaseExporter
      * @param EventDispatcher  $eventDispatcher
      * @param ItemRetriever    $itemRetriever
@@ -90,6 +107,7 @@ class OrderCreatorAction implements Action
      */
     public function __construct(
         StatusService $statusService,
+        VisitorInterface $internalOrderVisitor,
         DataBaseExporter $dataBaseExporter,
         EventDispatcher $eventDispatcher,
         ItemRetriever $itemRetriever,
@@ -108,6 +126,7 @@ class OrderCreatorAction implements Action
         $this->sendCwErrorMail = $sendCwErrorMail;
         $this->codesProcessor = $codesProcessor;
         $this->errorHandler = new Errors($this->sendErrorMail, $this->sendCwErrorMail);
+        $this->internalOrderVisitor = $internalOrderVisitor;
         $this->client = $client;
     }
 
@@ -120,6 +139,22 @@ class OrderCreatorAction implements Action
     }
 
     /**
+     * @param InternalOrder $internalOrder
+     */
+    public function setInternalOrder(InternalOrder $internalOrder)
+    {
+        $this->internalOrder = $internalOrder;
+    }
+
+    /**
+     * @return InternalOrder
+     */
+    public function getInternalOrder(): InternalOrder
+    {
+        return $this->internalOrder;
+    }
+
+    /**
      * @return bool
      */
     public function process()
@@ -129,14 +164,15 @@ class OrderCreatorAction implements Action
         $numberOfPreOrders = 0;
 
         $orderDetails = $this->statusService->checkStatus($this->status);
+        $this->getInternalOrder()->accept($this->internalOrderVisitor);
 
-        foreach ($orderDetails['orderedItems'] as $itemKey => $item) {
+        foreach ($this->getInternalOrder()->getItems() as $itemKey => $item) {
 
             try {
 
                 $retrievedItems = $this->itemRetriever->retrieveItem([
                     'item' => $item,
-                    'order' => $orderDetails['order']
+                    'order' => $this->getInternalOrder()->getOrder()
                 ]);
 
                 $orderedCodes = $this->codesPurchaser->purchase($retrievedItems['cwProductId'], $retrievedItems['qty']);
@@ -145,19 +181,19 @@ class OrderCreatorAction implements Action
                     $numberOfPreOrders++;
                 }
 
-                $this->databaseExporter->export($item, $orderedCodes, $itemKey, $orderDetails['orderId']);
+                $this->databaseExporter->export($item, $orderedCodes, $itemKey, $this->getInternalOrder()->getId());
 
             } catch (ResourceError $e) {
-                $this->errorHandler->supportResourceError($e, $orderDetails['order']);
+                $this->errorHandler->supportResourceError($e, $this->getInternalOrder()->getOrder());
                 $error = $e;
             } catch (\Exception $e) {
-                $this->errorHandler->supportError($orderDetails['order'], $e);
+                $this->errorHandler->supportError($this->getInternalOrder()->getOrder(), $e);
                 $error = $e;
             }
         }
 
         if($numberOfPreOrders > 0) {
-            $this->codesProcessor->process($orderDetails, $numberOfPreOrders, $error, $item);
+            $this->codesProcessor->process($this->getInternalOrder(), $numberOfPreOrders, $error, $item);
         }
 
         $this->eventDispatcher->dispatchEvent($orderDetails);
