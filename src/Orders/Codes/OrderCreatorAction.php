@@ -97,6 +97,7 @@ class OrderCreatorAction implements Action
     public function process()
     {
         $error = null;
+        $item = null;
         $numberOfPreOrders = 0;
 
         $orderDetails = $this->statusService->checkStatus($this->status);
@@ -128,7 +129,7 @@ class OrderCreatorAction implements Action
         }
 
         if($numberOfPreOrders > 0) {
-            $this->codesProcessor->process($orderDetails['order']);
+            $this->codesProcessor->process($orderDetails, $numberOfPreOrders, $error, $item);
         }
 
         $this->eventDispatcher->dispatchEvent($orderDetails);
