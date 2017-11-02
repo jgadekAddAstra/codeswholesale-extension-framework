@@ -1,6 +1,6 @@
 <?php
 
-namespace CodesWholesale\Visitor;
+namespace CodesWholesaleFramework\Visitor;
 
 /**
  * Interface VisitorInterface
