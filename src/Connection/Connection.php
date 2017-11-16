@@ -23,6 +23,7 @@ namespace CodesWholesaleFramework\Connection;
 use CodesWholesale\CodesWholesale;
 use CodesWholesale\ClientBuilder;
 use CodesWholesale\Client;
+use CodesWholesale\Storage\TokenDatabaseStorage;
 use CodesWholesale\Storage\TokenSessionStorage;
 
 /**
@@ -52,7 +53,7 @@ class Connection
                 'cw.endpoint_uri' => $options['environment'] == 0 ? CodesWholesale::SANDBOX_ENDPOINT : CodesWholesale::LIVE_ENDPOINT,
                 'cw.client_id' => $options['environment'] == 0 ? self::SANDBOX_CLIENT_ID : $options['client_id'],
                 'cw.client_secret' => $options['environment'] == 0 ? self::SANDBOX_CLIENT_SECRET : $options['client_secret'],
-                'cw.token_storage' => new TokenSessionStorage(),
+                'cw.token_storage' => isset($options['db']) && $options['db'] instanceof \PDO ? new TokenDatabaseStorage($options['db'], $options['prefix']) : new TokenSessionStorage(),
                 'cw.client.headers' => [
                     'User-Agent' => $options['client_headers'],
                 ]
