@@ -31,10 +31,12 @@ class SpreadCalculator implements SpreadCalculatorInterface
      * @param array $spreadParams
      * @param float $price
      *
-     * @return float|mixed
+     * @return float|null
      */
     public function calculateSpread(array $spreadParams, $price)
     {
+        $priceSpread = null;
+
         if ($spreadParams['cwSpreadType'] == 0) {
 
             $priceSpread = $price + $spreadParams['cwSpread'];

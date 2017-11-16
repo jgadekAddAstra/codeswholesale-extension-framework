@@ -16,13 +16,8 @@
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 namespace CodesWholesaleFramework\Postback\Extractor;
-/**
- * Created by PhpStorm.
- * User: maciejklowan
- * Date: 06/07/15
- * Time: 15:59
- */
 
 /**
  * Interface NewKeysExtractorInterface

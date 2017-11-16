@@ -3,6 +3,7 @@
 namespace CodesWholesaleFramework\Postback\ReceivePreOrders;
 
 use CodesWholesale\Client;
+use CodesWholesale\Resource\ProductOrdered;
 use CodesWholesaleFramework\Action;
 use CodesWholesaleFramework\Postback\Retriever\ItemRetriever;
 use CodesWholesale\Resource\Order;
@@ -72,6 +73,7 @@ class ReceivePreOrdersAction implements Action
 
         try {
 
+            /** @var ProductOrdered $productOrdered */
             $productOrdered = $this->connection->receiveProductOrdered();
 
             $allCodesFromProduct = Order::getCodes($productOrdered);

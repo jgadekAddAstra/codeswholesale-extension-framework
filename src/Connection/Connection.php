@@ -22,7 +22,7 @@ namespace CodesWholesaleFramework\Connection;
 
 use CodesWholesale\CodesWholesale;
 use CodesWholesale\ClientBuilder;
-use \CodesWholesale\Client;
+use CodesWholesale\Client;
 use CodesWholesale\Storage\TokenSessionStorage;
 
 /**

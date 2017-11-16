@@ -18,11 +18,15 @@ namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+use CodesWholesale\Client;
 use CodesWholesaleFramework\Action;
 use CodesWholesaleFramework\Postback\Retriever\SpreadRetriever;
-use CodesWholesaleFramework\PostBack\UpdatePriceAndStock\Utils\UpdatePriceAndStockInterface;
-use CodesWholesaleFramework\Postback\UpdatePriceAndStock\SpreadCalculator;
+use CodesWholesale\Resource\Product;
+use CodesWholesale\Resource\ResourceError;
 
+/**
+ * Class UpdatePriceAndStockAction
+ */
 class UpdatePriceAndStockAction implements Action
 {
     /**
@@ -30,8 +34,14 @@ class UpdatePriceAndStockAction implements Action
      */
     private $productUpdater;
 
+    /**
+     * @var Client
+     */
     private $connection;
 
+    /**
+     * @var string|null
+     */
     private $cwProductId;
 
     /**
@@ -39,6 +49,9 @@ class UpdatePriceAndStockAction implements Action
      */
     private $spreadParams;
 
+    /**
+     * @var SpreadCalculator
+     */
     private $spreadCalculator;
 
 
@@ -57,43 +70,53 @@ class UpdatePriceAndStockAction implements Action
         $this->spreadCalculator = new SpreadCalculator();
     }
 
+    /**
+     * @throws \HttpRequestException
+     */
     public function process()
     {
-        if ($this->cwProductId == null) {
+        if (null == $this->cwProductId) {
 
             $request = file_get_contents('php://input');
 
             if (empty($request)) {
-
-                die("No request data");
+                throw new \HttpRequestException('No request data', 400);
             }
 
-            $cwProductId = $this->connection->receiveUpdatedProductId();
+            $this->setProductId($this->connection->receiveUpdatedProductId());
 
         }
 
         try {
 
-            $product = \CodesWholesale\Resource\Product::get($cwProductId);
+            $product = Product::get($this->cwProductId);
 
-        } catch (\CodesWholesale\Resource\ResourceError $e) {
+        } catch (ResourceError $e) {
 
-            die("Received product id: " . $cwProductId . " Error: " . $e->getMessage());
+            throw new \HttpRequestException("Received product id: " . $this->cwProductId . " Error: " . $e->getMessage(), 400);
         }
 
         $quantity = $product->getStockQuantity();
+
+        /** @var float $price */
         $price = $product->getLowestPrice();
 
         $priceSpread = $this->spreadCalculator->calculateSpread($this->spreadParams->getSpreadParams(''), $price);
 
-        $this->productUpdater->updateProduct($cwProductId, $quantity , $priceSpread, $price);
+        $this->productUpdater->updateProduct($this->cwProductId, $quantity , $priceSpread, $price);
     }
 
+    /**
+     * @param $connection
+     */
     public function setConnection($connection)
     {
         $this->connection = $connection;
     }
 
+    /**
+     * @param $cwProductId
+     */
     public function setProductId($cwProductId)
     {
         $this->cwProductId = $cwProductId;
