@@ -40,7 +40,7 @@ class PurchaseCode
     public function purchase(array $productsToBuy, array $productIds, DataBaseExporter $exporter, int $internalOrderId): int
     {
         $preOrdersCount = 0;
-        $order = Order::createOrder($productsToBuy);
+        $order = Order::createOrder($productsToBuy, $internalOrderId, true);
 
         foreach ($order->getProducts() as $product) {
             $numberOfPreOrders = 0;
