@@ -1,4 +1,5 @@
 <?php
+
 namespace CodesWholesaleFramework\Orders\Codes;
 /**
  *   This file is part of codeswholesale-plugin-framework.
@@ -17,6 +18,8 @@ namespace CodesWholesaleFramework\Orders\Codes;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+use CodesWholesale\Resource\Code;
+use CodesWholesale\Util\Base64Writer;
 use CodesWholesaleFramework\Action;
 
 /**
@@ -90,11 +93,12 @@ class SendCodesAction implements Action
 
                 foreach ($links as $link) {
 
-                    $code = \CodesWholesale\Resource\Code::get($link);
+                    $code = Code::get($link);
 
                     if ($code->isImage()) {
 
-                        $attachments[] = \CodesWholesale\Util\CodeImageWriter::write($code, 'Cw_Attachments');
+                        /** @var Code $code */
+                        $attachments[] = Base64Writer::writeImageCode($code, 'Cw_Attachments');
                     }
 
                     if ($code->isPreOrder()) {
