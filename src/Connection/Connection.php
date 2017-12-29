@@ -44,11 +44,12 @@ class Connection
     private static $connection;
 
     /**
-     * @param array $options
+     * @param array                       $options
+     * @param UpdateProductInterface|null $productUpdater
      *
      * @return Client
      */
-    public static function getConnection(array $options, UpdateProductInterface $productUpdater): Client
+    public static function getConnection(array $options, UpdateProductInterface $productUpdater = null): Client
     {
 
         if (self::$connection === null) {
@@ -64,7 +65,9 @@ class Connection
 
             self::$connection = $builder->build();
 
-            self::update($productUpdater);
+            if ($productUpdater instanceof UpdateProductInterface) {
+                self::update($productUpdater);
+            }
         }
         return self::$connection;
     }
