@@ -27,7 +27,7 @@ use CodesWholesale\Resource\Notification;
 use CodesWholesale\Resource\StockAndPriceChange;
 use CodesWholesale\Storage\TokenDatabaseStorage;
 use CodesWholesale\Storage\TokenSessionStorage;
-use CodesWholesaleFramework\Postback\UpdatePriceAndStock\Utils\UpdateProductInterface;
+use CodesWholesaleFramework\Postback\UpdateProduct\UpdateProductInterface;
 
 /**
  * Class Connection

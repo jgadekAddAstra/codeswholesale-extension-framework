@@ -1,6 +1,6 @@
 <?php
 
-namespace CodesWholesaleFramework\Postback\UpdatePriceAndStock\Utils;
+namespace CodesWholesaleFramework\Postback\UpdateProduct;
 
 /**
  * Interface UpdateProductInterface
