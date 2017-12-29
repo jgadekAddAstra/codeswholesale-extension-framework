@@ -23,17 +23,20 @@ namespace CodesWholesaleFramework\Connection;
 use CodesWholesale\CodesWholesale;
 use CodesWholesale\ClientBuilder;
 use CodesWholesale\Client;
+use CodesWholesale\Resource\Notification;
+use CodesWholesale\Resource\StockAndPriceChange;
 use CodesWholesale\Storage\TokenDatabaseStorage;
 use CodesWholesale\Storage\TokenSessionStorage;
+use CodesWholesaleFramework\Postback\UpdatePriceAndStock\Utils\UpdateProductInterface;
 
 /**
  * Class Connection
  */
 class Connection
 {
-
     const SANDBOX_CLIENT_ID = 'ff72ce315d1259e822f47d87d02d261e';
     const SANDBOX_CLIENT_SECRET = '$2a$10$E2jVWDADFA5gh6zlRVcrlOOX01Q/HJoT6hXuDMJxek.YEo.lkO2T6';
+    const SIGNATURE = 'test_signature';
 
     /**
      * @var Client|null
@@ -45,7 +48,7 @@ class Connection
      *
      * @return Client
      */
-    public static function getConnection(array $options): Client
+    public static function getConnection(array $options, UpdateProductInterface $productUpdater): Client
     {
 
         if (self::$connection === null) {
@@ -60,8 +63,35 @@ class Connection
             ]);
 
             self::$connection = $builder->build();
+
+            self::update($productUpdater);
         }
         return self::$connection;
+    }
+
+    /**
+     * @param UpdateProductInterface $productUpdater
+     */
+    private static function update(UpdateProductInterface $productUpdater)
+    {
+        self::$connection->registerStockAndPriceChangeHandler(function(array $stockAndPriceChanges) use($productUpdater) {
+
+            /** @var StockAndPriceChange $stockAndPriceChange */
+            foreach ($stockAndPriceChanges as $stockAndPriceChange) {
+
+                $productUpdater->updateProduct(
+                    $stockAndPriceChange->getProductId(),
+                    $stockAndPriceChange->getQuantity(),
+                    $stockAndPriceChange->getPrice()
+                );
+            }
+        });
+
+        self::$connection->registerHidingProductHandler(function(Notification $notification) use($productUpdater)  {
+            $productUpdater->hideProduct($notification->getProductId());
+        });
+
+        self::$connection->handle(self::SIGNATURE);
     }
 
     /**
