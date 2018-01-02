@@ -1,6 +1,7 @@
 <?php
 
-namespace CodesWholesaleFramework\Postback\ReceivePreOrders\Utils;
+namespace CodesWholesaleFramework\Retriever;
+
 /**
  *   This file is part of codeswholesale-plugin-framework.
  *
@@ -18,14 +19,7 @@ namespace CodesWholesaleFramework\Postback\ReceivePreOrders\Utils;
  *   along with codeswholesale-plugin-framework; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-interface UpdateOrderWithPreOrdersInterface
+interface ItemRetriever
 {
-    /**
-     * @param $newKeys
-     * @param $textComment
-     *
-     * @return mixed
-     */
-    public function update($newKeys, $textComment);
+    public function retrieveItem($orderId);
 }
