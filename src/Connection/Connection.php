@@ -38,7 +38,7 @@ class Connection
 {
     const SANDBOX_CLIENT_ID = 'ff72ce315d1259e822f47d87d02d261e';
     const SANDBOX_CLIENT_SECRET = '$2a$10$E2jVWDADFA5gh6zlRVcrlOOX01Q/HJoT6hXuDMJxek.YEo.lkO2T6';
-    const SIGNATURE = 'test_signature';
+    const SANDBOX_SIGNATURE = 'test_signature';
 
     /**
      * @var Client|null
@@ -48,12 +48,16 @@ class Connection
     /**
      * @param array                       $options
      * @param UpdateProductInterface|null $productUpdater
+     * @param UpdateOrderInterface|null   $orderUpdater
      *
      * @return Client
      */
-    public static function getConnection(array $options, UpdateProductInterface $productUpdater = null): Client
+    public static function getConnection(
+        array $options,
+        UpdateProductInterface $productUpdater = null,
+        UpdateOrderInterface $orderUpdater = null
+    ): Client
     {
-
         if (self::$connection === null) {
             $builder = new ClientBuilder([
                 'cw.endpoint_uri' => $options['environment'] == 0 ? CodesWholesale::SANDBOX_ENDPOINT : CodesWholesale::LIVE_ENDPOINT,
@@ -71,9 +75,11 @@ class Connection
                 self::updateProduct($productUpdater);
             }
 
-            if ($productUpdater instanceof UpdateOrderInterface) {
-                self::updateOrder($productUpdater);
+            if ($orderUpdater instanceof UpdateOrderInterface) {
+                self::updateOrder($orderUpdater);
             }
+
+            self::$connection->handle(array_key_exists('signature', $options) && $options['signature'] != null ? $options['signature'] : self::SANDBOX_SIGNATURE);
         }
         return self::$connection;
     }
@@ -103,8 +109,6 @@ class Connection
         self::$connection->registerNewProductHandler(function(Notification $notification) use($productUpdater) {
             $productUpdater->newProduct($notification->getProductId());
         });
-
-        self::$connection->handle(self::SIGNATURE);
     }
 
     /**
