@@ -23,10 +23,12 @@ namespace CodesWholesaleFramework\Connection;
 use CodesWholesale\CodesWholesale;
 use CodesWholesale\ClientBuilder;
 use CodesWholesale\Client;
+use CodesWholesale\Resource\AssignedPreOrder;
 use CodesWholesale\Resource\Notification;
 use CodesWholesale\Resource\StockAndPriceChange;
 use CodesWholesale\Storage\TokenDatabaseStorage;
 use CodesWholesale\Storage\TokenSessionStorage;
+use CodesWholesaleFramework\Postback\UpdateOrder\UpdateOrderInterface;
 use CodesWholesaleFramework\Postback\UpdateProduct\UpdateProductInterface;
 
 /**
@@ -66,7 +68,11 @@ class Connection
             self::$connection = $builder->build();
 
             if ($productUpdater instanceof UpdateProductInterface) {
-                self::update($productUpdater);
+                self::updateProduct($productUpdater);
+            }
+
+            if ($productUpdater instanceof UpdateOrderInterface) {
+                self::updateOrder($productUpdater);
             }
         }
         return self::$connection;
@@ -75,7 +81,7 @@ class Connection
     /**
      * @param UpdateProductInterface $productUpdater
      */
-    private static function update(UpdateProductInterface $productUpdater)
+    private static function updateProduct(UpdateProductInterface $productUpdater)
     {
         self::$connection->registerStockAndPriceChangeHandler(function(array $stockAndPriceChanges) use($productUpdater) {
 
@@ -90,11 +96,25 @@ class Connection
             }
         });
 
-        self::$connection->registerHidingProductHandler(function(Notification $notification) use($productUpdater)  {
+        self::$connection->registerHidingProductHandler(function(Notification $notification) use($productUpdater) {
             $productUpdater->hideProduct($notification->getProductId());
         });
 
+        self::$connection->registerNewProductHandler(function(Notification $notification) use($productUpdater) {
+            $productUpdater->newProduct($notification->getProductId());
+        });
+
         self::$connection->handle(self::SIGNATURE);
+    }
+
+    /**
+     * @param UpdateOrderInterface $orderUpdater
+     */
+    private static function updateOrder(UpdateOrderInterface $orderUpdater)
+    {
+        self::$connection->registerPreOrderAssignedHandler(function(AssignedPreOrder $notification) use($orderUpdater) {
+            $orderUpdater->preOrderAssigned($notification->getCodeId());
+        });
     }
 
     /**
