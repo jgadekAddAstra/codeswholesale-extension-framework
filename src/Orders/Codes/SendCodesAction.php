@@ -61,7 +61,7 @@ class SendCodesAction implements Action
         OrderDetailsProvider $orderDetailsProvider,
         SendCodeMailer $sendCodeMailer,
         OrderNotificationDispatcher $orderNotificationDispatcher,
-        $linkRetriever
+        LinkRetriever $linkRetriever
     )
     {
         $this->orderDetailsProvider = $orderDetailsProvider;
