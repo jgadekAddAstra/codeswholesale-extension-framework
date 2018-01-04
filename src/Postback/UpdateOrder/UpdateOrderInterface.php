@@ -8,9 +8,9 @@ namespace CodesWholesaleFramework\Postback\UpdateOrder;
 interface UpdateOrderInterface
 {
     /**
-     * @param string $orderId
+     * @param string $code
      *
      * @return mixed
      */
-    public function preOrderAssigned(string $orderId);
+    public function preOrderAssigned(string $code);
 }

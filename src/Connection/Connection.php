@@ -134,7 +134,7 @@ class Connection
     private static function updateOrder(UpdateOrderInterface $orderUpdater)
     {
         self::$connection->registerPreOrderAssignedHandler(function(AssignedPreOrder $notification) use($orderUpdater) {
-            $orderUpdater->preOrderAssigned($notification->getOrderId());
+            $orderUpdater->preOrderAssigned($notification->getCodeId());
         });
     }
 
