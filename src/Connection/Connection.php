@@ -95,20 +95,36 @@ class Connection
             /** @var StockAndPriceChange $stockAndPriceChange */
             foreach ($stockAndPriceChanges as $stockAndPriceChange) {
 
+                $productPrice = null;
+
+                foreach ($stockAndPriceChange->getPrices() as $price) {
+                    if('100+' == $price->getRange()) {
+                        $productPrice = $price->getValue();
+                    }
+                }
+
+                if (null === $productPrice) {
+                    $productPrice = $stockAndPriceChange->getPrices()[0]->getValue();
+                }
+
                 $productUpdater->updateProduct(
                     $stockAndPriceChange->getProductId(),
                     $stockAndPriceChange->getQuantity(),
-                    $stockAndPriceChange->getPrice()
+                    $productPrice
                 );
             }
+        });
+
+        self::$connection->registerUpdateProductHandler(function (Notification $notification) use($productUpdater) {
+            $productUpdater->updateProduct($notification->getProductId());
         });
 
         self::$connection->registerHidingProductHandler(function(Notification $notification) use($productUpdater) {
             $productUpdater->hideProduct($notification->getProductId());
         });
 
-        self::$connection->registerNewProductHandler(function(ProductNotification $notification) use($productUpdater) {
-            $productUpdater->newProduct($notification->getProductHref());
+        self::$connection->registerNewProductHandler(function(Notification $notification) use($productUpdater) {
+            $productUpdater->newProduct($notification->getProductId());
         });
     }
 
@@ -118,7 +134,7 @@ class Connection
     private static function updateOrder(UpdateOrderInterface $orderUpdater)
     {
         self::$connection->registerPreOrderAssignedHandler(function(AssignedPreOrder $notification) use($orderUpdater) {
-            $orderUpdater->preOrderAssigned($notification->getCodeId());
+            $orderUpdater->preOrderAssigned($notification->getOrderId());
         });
     }
 
