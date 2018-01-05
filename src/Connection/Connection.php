@@ -23,10 +23,6 @@ namespace CodesWholesaleFramework\Connection;
 use CodesWholesale\CodesWholesale;
 use CodesWholesale\ClientBuilder;
 use CodesWholesale\Client;
-use CodesWholesale\Resource\AssignedPreOrder;
-use CodesWholesale\Resource\Notification;
-use CodesWholesale\Resource\StockAndPriceChange;
-use CodesWholesale\Resource\ProductNotification;
 use CodesWholesale\Storage\TokenDatabaseStorage;
 use CodesWholesale\Storage\TokenSessionStorage;
 use CodesWholesaleFramework\Postback\UpdateOrder\UpdateOrderInterface;
@@ -45,7 +41,7 @@ class Connection
      * @var Client|null
      */
     private static $connection;
-
+    public static $signature;
     /**
      * @param array                       $options
      * @param UpdateProductInterface|null $productUpdater
@@ -53,11 +49,7 @@ class Connection
      *
      * @return Client
      */
-    public static function getConnection(
-        array $options,
-        UpdateProductInterface $productUpdater = null,
-        UpdateOrderInterface $orderUpdater = null
-    ): Client
+    public static function getConnection(array $options): Client
     {
         if (self::$connection === null) {
             $builder = new ClientBuilder([
@@ -71,73 +63,12 @@ class Connection
             ]);
 
             self::$connection = $builder->build();
-
-            if ($productUpdater instanceof UpdateProductInterface) {
-                self::updateProduct($productUpdater);
-            }
-
-            if ($orderUpdater instanceof UpdateOrderInterface) {
-                self::updateOrder($orderUpdater);
-            }
-
-            self::$connection->handle(array_key_exists('signature', $options) && $options['signature'] != null ? $options['signature'] : self::SANDBOX_SIGNATURE);
+            self::$signature = array_key_exists('signature', $options) && $options['signature'] != null ? $options['signature'] : self::SANDBOX_SIGNATURE;
         }
+        
         return self::$connection;
     }
-
-    /**
-     * @param UpdateProductInterface $productUpdater
-     */
-    private static function updateProduct(UpdateProductInterface $productUpdater)
-    {
-        self::$connection->registerStockAndPriceChangeHandler(function(array $stockAndPriceChanges) use($productUpdater) {
-
-            /** @var StockAndPriceChange $stockAndPriceChange */
-            foreach ($stockAndPriceChanges as $stockAndPriceChange) {
-
-                $productPrice = null;
-
-                foreach ($stockAndPriceChange->getPrices() as $price) {
-                    if('100+' == $price->getRange()) {
-                        $productPrice = $price->getValue();
-                    }
-                }
-
-                if (null === $productPrice) {
-                    $productPrice = $stockAndPriceChange->getPrices()[0]->getValue();
-                }
-
-                $productUpdater->updateProduct(
-                    $stockAndPriceChange->getProductId(),
-                    $stockAndPriceChange->getQuantity(),
-                    $productPrice
-                );
-            }
-        });
-
-        self::$connection->registerUpdateProductHandler(function (Notification $notification) use($productUpdater) {
-            $productUpdater->updateProduct($notification->getProductId());
-        });
-
-        self::$connection->registerHidingProductHandler(function(Notification $notification) use($productUpdater) {
-            $productUpdater->hideProduct($notification->getProductId());
-        });
-
-        self::$connection->registerNewProductHandler(function(Notification $notification) use($productUpdater) {
-            $productUpdater->newProduct($notification->getProductId());
-        });
-    }
-
-    /**
-     * @param UpdateOrderInterface $orderUpdater
-     */
-    private static function updateOrder(UpdateOrderInterface $orderUpdater)
-    {
-        self::$connection->registerPreOrderAssignedHandler(function(AssignedPreOrder $notification) use($orderUpdater) {
-            $orderUpdater->preOrderAssigned($notification->getCodeId());
-        });
-    }
-
+    
     /**
      * @return bool
      */
