@@ -9,15 +9,17 @@ use CodesWholesale\Resource\Notification;
 use CodesWholesale\Resource\StockAndPriceChange;
 
 class RegisterHandlers {
+    const SANDBOX_SIGNATURE = 'test_signature';
+    
     private $client;
     private $signature;
     private $productUpdater;
     private $orderUpdater;
             
-    public function __construct(Client $client, String $signature) 
+    public function __construct(Client $client, String $signature, $environment) 
     {  
         $this->client = $client;
-        $this->signature= $signature;
+        $this->signature= $environment == 0 ? self::SANDBOX_SIGNATURE : $signature;
     }
     
     public function setProductUpdater(UpdateProductInterface $productUpdater = null) 

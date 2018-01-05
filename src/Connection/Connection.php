@@ -35,13 +35,12 @@ class Connection
 {
     const SANDBOX_CLIENT_ID = 'ff72ce315d1259e822f47d87d02d261e';
     const SANDBOX_CLIENT_SECRET = '$2a$10$E2jVWDADFA5gh6zlRVcrlOOX01Q/HJoT6hXuDMJxek.YEo.lkO2T6';
-    const SANDBOX_SIGNATURE = 'test_signature';
-
+    
     /**
      * @var Client|null
      */
     private static $connection;
-    public static $signature;
+
     /**
      * @param array                       $options
      * @param UpdateProductInterface|null $productUpdater
@@ -63,8 +62,7 @@ class Connection
             ]);
 
             self::$connection = $builder->build();
-            self::$signature = array_key_exists('signature', $options) && $options['signature'] != null ? $options['signature'] : self::SANDBOX_SIGNATURE;
-        }
+       }
         
         return self::$connection;
     }
