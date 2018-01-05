@@ -97,8 +97,5 @@ class RegisterHandlers {
         
         return $productPrice;
     }
-    
-   
-    
 }
 
