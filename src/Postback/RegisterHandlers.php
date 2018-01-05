@@ -1,4 +1,6 @@
 <?php
+namespace CodesWholesaleFramework\Postback;
+
 use CodesWholesale\Client;
 use CodesWholesaleFramework\Postback\UpdateOrder\UpdateOrderInterface;
 use CodesWholesaleFramework\Postback\UpdateProduct\UpdateProductInterface;
